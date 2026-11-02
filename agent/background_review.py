@@ -1335,6 +1335,30 @@ _PROMPT_NAME_BY_SCOPE = {
 }
 
 
+def review_unreviewed_memory_tail(agent: Any, messages: Optional[list]) -> None:
+    """Session end: one memory-only review of the turns the every-N-turn nudge never reached.
+
+    Most sessions end before ``memory.nudge_interval`` user turns, so without this they are never
+    reviewed. Claims the tail by zeroing the nudge counter (a second teardown path finds nothing),
+    then reuses the normal spawn, which keeps every existing gate (delegate depth, ``enabled``,
+    one review at a time, idle deferral)."""
+    pending = int(getattr(agent, "_turns_since_memory", 0) or 0)
+    if (pending <= 0 or getattr(agent, "skip_background_review", False)
+            or int(getattr(agent, "_memory_nudge_interval", 0) or 0) <= 0 or not getattr(agent, "_memory_store", None)
+            or not (getattr(agent, "_memory_enabled", False) or getattr(agent, "_user_profile_enabled", False))):
+        return
+    snapshot = messages if isinstance(messages, list) else getattr(agent, "_session_messages", None)
+    if not isinstance(snapshot, list) or not any(m.get("role") == "user" and m.get("content")
+                                                 for m in snapshot if isinstance(m, dict)):
+        return
+    agent._turns_since_memory = 0
+    try:
+        agent._spawn_background_review(messages_snapshot=list(snapshot), review_memory=True, review_skills=False)
+    except Exception:  # teardown must finish; the tail stays unclaimed for another path
+        agent._turns_since_memory = pending
+        logger.debug("session-end memory review spawn failed", exc_info=True)
+
+
 def spawn_background_review_thread(
     agent: Any, messages_snapshot: list[dict], review_memory: bool = False,
     review_skills: bool = False, focus: Optional[str] = None,
