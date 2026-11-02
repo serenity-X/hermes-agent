@@ -372,8 +372,8 @@ _MEMORY_ROUTING_BLOCK = (
     "  • USER.md (memory tool, target='user'): who the user is — persona, preferences, "
     "communication and work style, personal details they revealed, and expectations about how you "
     "should behave.\n"
-    "  • MEMORY.md (memory tool, target='memory'): facts about the ENVIRONMENT you operate in — "
-    "tool quirks, project conventions, config gotchas, paths and endpoints that matter.\n\n"
+    "  • MEMORY.md (memory tool, target='memory'): stable facts about the ENVIRONMENT you operate in — "
+    "hosts, OS, hardware, which services and providers run, standing project conventions.\n\n"
     "One fact goes to ONE store, never both — writing it to both bloats both files until they hit "
     "their size limits and crowds out the facts that matter; misrouting it puts it where the next "
     "session won't look. If the tool schema lists only one "
@@ -386,6 +386,14 @@ _MEMORY_ROUTING_BLOCK = (
     "unless the user marked it general ('always', 'from now on', 'remember') or stated a standing "
     "like/dislike ('I hate X', 'stop doing Y'). If unsure, leave it "
     "out — a wrong fact misleads every future session.\n\n"
+    # Measured on 37 real sessions (Opus writer, answer key of should-save facts): without these rules
+    # 0% of saved entries were a clean single fact; procedures, dated snapshots and bundles dominated.
+    "Save a fact only if it is still true and useful a month from now in a session about another "
+    "topic. Never save a procedure, fix, lesson or pitfall (those belong in a skill), task progress or "
+    "the result of one run, or a value you can read back when needed (version, port, path, IP, config "
+    "key). Write ONE fact per entry, one short sentence with nothing appended: not 'The workstation "
+    "runs Manjaro unstable, so partial upgrades can break sonames' but 'The workstation runs Manjaro "
+    "on the unstable branch.' Two services or hosts are two entries. Most conversations save nothing.\n\n"
 )
 
 _MEMORY_REVIEW_PROMPT = (
