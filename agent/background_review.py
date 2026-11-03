@@ -824,6 +824,25 @@ def _classify_review_result(actions: list[str]) -> str:
     return "+".join(kind for kind, hit in (("skill", has_skill), ("memory", has_memory)) if hit) or "none"
 
 
+def _review_outcome(review_messages: list[dict], prior_snapshot: list[dict], actions: list[str]) -> str:
+    """Completion-log result: applied actions win; else ``staged`` when the fork queued writes for
+    approval (they never reach the user-facing summary, so they used to log as ``none``)."""
+    result = _classify_review_result(actions)
+    if result != "none":
+        return result
+    seen_ids, _ = _prior_tool_keys(prior_snapshot)
+    for msg in _tool_messages(review_messages):
+        if msg.get("tool_call_id") in seen_ids:
+            continue
+        try:
+            data = json.loads(msg.get("content") or "{}")
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(data, dict) and data.get("success") and data.get("staged"):
+            return "staged"
+    return "none"
+
+
 def _log_review_completion(usage: dict[str, Any], result: str) -> None:
     """Emit a per-fork completion line so cost is visible where it is incurred."""
     logger.info(
@@ -1307,7 +1326,7 @@ def _run_review_in_thread(
                 e,
             )
             actions = []
-        _log_review_completion(st.review_usage, _classify_review_result(actions))
+        _log_review_completion(st.review_usage, _review_outcome(st.review_messages, messages_snapshot, actions))
         if actions:
             _publish_review_summary(agent, actions)
     except Exception as e:
