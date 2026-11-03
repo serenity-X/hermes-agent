@@ -99,6 +99,11 @@ def _arm_exit_watchdog(timeout_s: float | None = None, *, from_signal: bool = Fa
         threading.Thread(target=_watchdog, daemon=True, name="exit-watchdog").start()
 
 
+# Under the exit watchdog (default 30s, armed when cleanup starts) so the wait never trips it;
+# memory-only reviews measured at 4-60s, so a long one is still cut short.
+_SESSION_END_REVIEW_WAIT_S = 20.0
+
+
 def _shutdown_agent_memory_provider(agent) -> None:
     """Memory-provider shutdown (on_session_end + shutdown_all) at the real session boundary."""
     if not (agent and hasattr(agent, 'shutdown_memory_provider')):
@@ -122,6 +127,10 @@ def _shutdown_agent_memory_provider(agent) -> None:
     else:
         logger.info("CLI cleanup calling memory shutdown for session %s without session message list", _sid)
         agent.shutdown_memory_provider()
+    # The session-end memory review runs on a daemon thread; exiting now kills it mid-request.
+    run = getattr(agent, "_background_review_run", None)
+    if run is not None and not run.request_done.wait(timeout=_SESSION_END_REVIEW_WAIT_S):
+        logger.info("CLI exit stopped waiting for the session-end memory review after %ss", _SESSION_END_REVIEW_WAIT_S)
 
 
 def _stop_cli_wake_word() -> None:
