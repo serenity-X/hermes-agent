@@ -204,12 +204,15 @@ _RAW_CONFIG_CACHE_MAX = 128
 # Guards every cache read/publish/evict: concurrent tool threads share it, and an unlocked
 # ``pop(next(iter(...)))`` races another thread's insert (RuntimeError) or pop (KeyError).
 _RAW_CONFIG_CACHE_LOCK = threading.Lock()
+# Last successful parse per config path, served when a later read raises. One entry per home.
+_LAST_GOOD_RAW_CONFIG: dict[str, dict[str, Any]] = {}
 
 
 def _raw_config_cache_clear() -> None:
     """Test hook — drop the shared raw config cache."""
     with _RAW_CONFIG_CACHE_LOCK:
         _RAW_CONFIG_CACHE.clear()
+        _LAST_GOOD_RAW_CONFIG.clear()
 
 
 def _config_cache_key(config_path: Path) -> Optional[tuple[Any, ...]]:
@@ -238,10 +241,14 @@ def _load_raw_config() -> dict[str, Any]:
     try:
         parsed = read_config_doc(config_path)
     except Exception as e:
+        # Fail closed: an unreadable config (caught mid-write) must not read as "nothing disabled".
         logger.debug("Could not read skill config %s: %s", config_path, e)
-        return {}
+        with _RAW_CONFIG_CACHE_LOCK:
+            return _LAST_GOOD_RAW_CONFIG.get(str(config_path), {})
     if not isinstance(parsed, dict):
         return {}
+    with _RAW_CONFIG_CACHE_LOCK:
+        _LAST_GOOD_RAW_CONFIG[str(config_path)] = parsed
     if cache_key is not None:
         with _RAW_CONFIG_CACHE_LOCK:
             _RAW_CONFIG_CACHE[cache_key] = parsed
