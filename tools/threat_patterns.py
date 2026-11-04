@@ -109,7 +109,10 @@ _PATTERNS: list[tuple[str, str, str]] = [
 # plus, BOM, LTR/RTL embedding + pop + overrides, LTR/RTL/first-strong isolates + pop.
 INVISIBLE_CHARS = frozenset(
     "\u200b\u200c\u200d\u2060\u2062\u2063\u2064\ufeff"
-    "\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069")
+    "\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069"
+    # Unicode TAG block: renders as nothing, yet many models read each tag as its ASCII twin, so a
+    # tag-encoded instruction rides inside text that looks clean ("ASCII smuggling").
+    + "".join(chr(cp) for cp in range(0xE0000, 0xE0080)))
 
 # Compiled per scope at import; inclusion is cumulative (all ⊂ context ⊂ strict).
 _SCOPE_SETS = {"all": ("all", "context", "strict"), "context": ("context", "strict"), "strict": ("strict",)}
