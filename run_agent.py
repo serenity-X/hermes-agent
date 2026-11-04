@@ -187,6 +187,7 @@ def _notify_context_engine_session_end(agent: Any, messages: Optional[list]) -> 
         _quietly(lambda: engine.on_session_end(agent.session_id or "", messages or []))
 
 
+
 def _pool_may_recover_from_rate_limit(pool) -> bool:
     """Wait for credential-pool rotation (True) or fall back to ``fallback_model`` (False) after a 429.
 
@@ -870,6 +871,8 @@ class AIAgent(
         if getattr(self, "_memory_provider_shutdown", False):
             return
         self._memory_provider_shutdown = True
+        from agent.background_review import review_unreviewed_memory_tail
+        review_unreviewed_memory_tail(self, messages)
         if self._memory_manager and self._memory_manager.claim_teardown(session_end=True):
             try:
                 self._memory_manager.on_session_end(messages or [])
