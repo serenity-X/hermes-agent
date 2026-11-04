@@ -772,7 +772,7 @@ DEFAULT_CONFIG = {
             "reasoning_effort": "",
             "language": "",
         },
-        "memory_query_rewrite": _aux(8, reasoning_effort=False),
+        "memory_query_rewrite": _aux(8, reasoning_effort=False), "session_search_rerank": _aux(30),
         "tts_audio_tags": _aux(30),
         "voice_chat": {**_aux(120), "reasoning_effort": "none"},  # agent/voice_turn_route.py; off = lowest valid
         # Kanban: triage_specifier expands a Triage one-liner into a spec (cheap model OK);
@@ -1295,7 +1295,7 @@ DEFAULT_CONFIG = {
             "info_log_min_delta_mb": 0.0,
         },
     },
-    "memory": {  # Persistent memory — bounded curated memory injected into the system prompt
+    "session_search": {"rerank": {"enabled": False}}, "memory": {  # rerank: 1 aux call per search given `intent`; memory: curated, prompt-injected
         "memory_enabled": True,
         "user_profile_enabled": True,
         "prefetch_spill_enabled": False,  # External recall opt-in to hooks.output_spill.
