@@ -68,7 +68,7 @@ async def prepare_compress(authority, live, payload, prepared):
 
     def summarize():
         with policy_scope(policy, authority=authority):
-            from agent.conversation_compression import _pre_compress_memory_context
+            from agent.conversation_compression_checkpoint import _pre_compress_memory_context
             memory_context = _pre_compress_memory_context(resident, head, False) if resident is not None else ''
             engine = _plugin_engine(authority, policy, config, model, runtime, resident, snapshot['target'])
             if engine is not None:
