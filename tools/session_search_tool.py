@@ -750,9 +750,9 @@ SESSION_SEARCH_SCHEMA = {
             "intent": {
                 "type": "string",
                 "description": (
-                    "Discovery shape only, optional. The user's actual question in plain words "
-                    "(not keywords). When the operator enabled re-ranking, the top hits are "
-                    "re-ordered by how well they answer it; otherwise ignored."
+                    "Discovery shape: pass the user's question here in plain words, alongside "
+                    "the keyword `query` (e.g. query='deploy OR codename', intent='what codename "
+                    "did we pick for the deploy?'). Used to rank the hits by what they answer."
                 ),
             },
             "limit": {
