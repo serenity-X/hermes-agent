@@ -143,9 +143,9 @@ DEFAULT_CONFIG = {
         # turn), "cold" (first turn of a session only).
         "service_tier": "",
         "fast_auto_seconds": 60,
-        # Responses API final-answer length (`text.verbosity`): "" = not sent (provider default),
-        # or low | medium | high. Responses-family transports only; chat_completions never sends it.
+        # Responses-only `text.verbosity` (never chat_completions): "" = not sent, or low | medium | high.
         "text_verbosity": "",
+        "daybreak": False,  # opt-in; only catalog-listed Codex models (agent/codex_service_tiers.py)
         # System-prompt guidance telling the model to call tools instead of describing actions.
         # "auto" = gpt/codex models; true/false = force for all models; or a list of model-name
         # substrings (e.g. ["gpt", "codex", "gemini", "qwen"]).
@@ -772,7 +772,7 @@ DEFAULT_CONFIG = {
             "reasoning_effort": "",
             "language": "",
         },
-        "memory_query_rewrite": _aux(8, reasoning_effort=False),
+        "memory_query_rewrite": _aux(8, reasoning_effort=False), "session_search_rerank": _aux(30),
         "tts_audio_tags": _aux(30),
         "voice_chat": {**_aux(120), "reasoning_effort": "none"},  # agent/voice_turn_route.py; off = lowest valid
         # Kanban: triage_specifier expands a Triage one-liner into a spec (cheap model OK);
@@ -1295,7 +1295,7 @@ DEFAULT_CONFIG = {
             "info_log_min_delta_mb": 0.0,
         },
     },
-    "memory": {  # Persistent memory — bounded curated memory injected into the system prompt
+    "session_search": {"rerank": {"enabled": False}}, "memory": {  # rerank: 1 aux call per search given `intent`; memory: curated, prompt-injected
         "memory_enabled": True,
         "user_profile_enabled": True,
         "prefetch_spill_enabled": False,  # External recall opt-in to hooks.output_spill.
@@ -2918,12 +2918,10 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
     # ── Bundled skills (opt-in) ── category="skill" (not "tool") so the sandbox env blocklist in
     # tools/environments/local.py does NOT rewrite them; skills need them passed through to curl
     # via tools/env_passthrough.py.
-    "NOTION_API_KEY": _skill("Notion integration token (used by the `notion` skill)",
+    "NOTION_API_KEY": _skill("Notion integration token (used by the Teams meeting pipeline's Notion sink)",
         "Notion API key", "https://www.notion.so/my-integrations"),
     "LINEAR_API_KEY": _skill("Linear personal API key (used by the `linear` skill)",
         "Linear API key", "https://linear.app/settings/account/security"),
-    "AIRTABLE_API_KEY": _skill("Airtable personal access token (used by the `airtable` skill)",
-        "Airtable API key", "https://airtable.com/create/tokens"),
     "TENOR_API_KEY": _skill("Tenor API key for GIF search (used by the `gif-search` skill)",
         "Tenor API key", "https://developers.google.com/tenor/guides/quickstart"),
     # ── Honcho ──
